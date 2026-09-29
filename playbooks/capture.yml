@@ -1,0 +1,66 @@
+---
+- name: Discover protected nodes
+  hosts: bastion
+  gather_facts: true
+
+  tasks:
+    - name: Lookup leases
+      ansible.builtin.command:
+        cmd: awk '{ print $3 }' /var/lib/misc/dnsmasq.leases
+      register: leases
+
+    - name: Add leases to voliatile inventory
+      ansible.builtin.add_host:
+        name: "{{ item }}"
+        groups: p_nodes
+        ansible_user: op
+          
+      loop: "{{ leases.stdout_lines }}"
+      
+    - name: Print p nodes group
+      ansible.builtin.debug:
+        msg: "P nodes: {{ groups['p_nodes'] }}"
+
+- name: Capture images from each camera
+  hosts: bastion, p_nodes
+  gather_facts: false
+
+  vars:
+    remote_dir: "/home/op/Cluster"
+    local_dir: "../cluster_captures"
+
+  tasks:
+    - name: Capture on bastion
+      ansible.builtin.script: ../scripts/capture.py
+      when: inventory_hostname == 'bastion'
+
+    - name: Capture on each p node
+      when: "'p_nodes' in group_names"
+      ansible.builtin.command:
+        cmd: ssh op@{{ item }} python3 - {{ item }}
+        stdin: "{{ lookup('file', '../scripts/capture.py') }}"
+      loop: "{{ hostvars['bastion']['leases'].stdout_lines }}"
+      delegate_to: bastion
+
+    - name: Copy p node images to bastion
+      ansible.builtin.command:
+        cmd: scp op@{{ item }}:{{ remote_dir }}/*.jpg {{ remote_dir }}/
+      when: "'p_nodes' in group_names"
+      delegate_to: bastion
+      loop: "{{ hostvars['bastion']['leases'].stdout_lines }}"
+      
+    - name: Find images on bastion # includes p node imges
+      ansible.builtin.find:
+        paths: "{{ remote_dir }}"
+        patterns: "*.jpg"
+      register: found_images
+      when: inventory_hostname == 'bastion'
+
+    - name: Fetch images from bastion
+      ansible.builtin.fetch:
+        src: "{{ item.path }}"
+        dest: "{{ local_dir }}/"
+        flat: yes
+      loop: "{{ found_images.files }}"
+      when: inventory_hostname == 'bastion'
+    
