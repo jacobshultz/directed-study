@@ -1,4 +1,4 @@
 all:
   hosts:
-    bastion:
+    controller:
       ansible_host: 192.168.12.246

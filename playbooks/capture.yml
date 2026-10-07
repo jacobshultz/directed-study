@@ -1,6 +1,6 @@
 ---
 - name: Discover protected nodes
-  hosts: bastion
+  hosts: controller
   gather_facts: true
 
   tasks:
@@ -22,7 +22,7 @@
         msg: "P nodes: {{ groups['p_nodes'] }}"
 
 - name: Capture images from each camera
-  hosts: bastion, p_nodes
+  hosts: controller, p_nodes
   gather_facts: false
 
   vars:
@@ -30,37 +30,37 @@
     local_dir: "../cluster_captures"
 
   tasks:
-    - name: Capture on bastion
+    - name: Capture on controller
       ansible.builtin.script: ../scripts/capture.py
-      when: inventory_hostname == 'bastion'
+      when: inventory_hostname == 'controller'
 
     - name: Capture on each p node
       when: "'p_nodes' in group_names"
       ansible.builtin.command:
         cmd: ssh op@{{ item }} python3 - {{ item }}
         stdin: "{{ lookup('file', '../scripts/capture.py') }}"
-      loop: "{{ hostvars['bastion']['leases'].stdout_lines }}"
-      delegate_to: bastion
+      loop: "{{ hostvars['controller']['leases'].stdout_lines }}"
+      delegate_to: controller
 
-    - name: Copy p node images to bastion
+    - name: Copy p node images to controller
       ansible.builtin.command:
         cmd: scp op@{{ item }}:{{ remote_dir }}/*.jpg {{ remote_dir }}/
       when: "'p_nodes' in group_names"
-      delegate_to: bastion
-      loop: "{{ hostvars['bastion']['leases'].stdout_lines }}"
+      delegate_to: controller
+      loop: "{{ hostvars['controller']['leases'].stdout_lines }}"
       
-    - name: Find images on bastion # includes p node imges
+    - name: Find images on controller # includes p node imges
       ansible.builtin.find:
         paths: "{{ remote_dir }}"
         patterns: "*.jpg"
       register: found_images
-      when: inventory_hostname == 'bastion'
+      when: inventory_hostname == 'controller'
 
-    - name: Fetch images from bastion
+    - name: Fetch images from controller
       ansible.builtin.fetch:
         src: "{{ item.path }}"
         dest: "{{ local_dir }}/"
         flat: yes
       loop: "{{ found_images.files }}"
-      when: inventory_hostname == 'bastion'
+      when: inventory_hostname == 'controller'
     

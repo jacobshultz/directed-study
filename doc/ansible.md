@@ -5,7 +5,7 @@ Execute image capture on both nodes:
 
 The capture playbook records an image from both PIs.
 
-It runs SSH from the cmdline of the bastion node to access the protected nodes.
+It runs SSH from the cmdline of the controller node to access the protected nodes.
 
 Protected nodes are accessed dynamically by reading the leases file.
 
