@@ -1,2 +1,4 @@
 .env
 secrets
+picamera2-examples
+venv
