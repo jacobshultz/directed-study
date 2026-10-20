@@ -1,48 +1,48 @@
 services:
-    semaphore_db:
+    postgres:
         image: postgres
         environment:
-            POSTGRES_USER: semaphore
+            POSTGRES_USER: admin
             POSTGRES_PASSWORD:  changeme
             POSTGRES_DB: semaphore
         networks:
-            - semaphore_network
+            - scd_network
     semaphore:
-        ports:
-            - 3000:3000
         depends_on:
-            - semaphore_db
+            - postgres
         image: semaphoreui/semaphore:v2.19.12
         environment:
+            SEMAPHORE_WEB_ROOT: http://localhost/admin
             SEMAPHORE_DB_DIALECT: postgres
-            SEMAPHORE_DB_HOST: semaphore_db
+            SEMAPHORE_DB_HOST: postgres
             SEMAPHORE_DB_NAME: semaphore
-            SEMAPHORE_DB_USER: semaphore
+            SEMAPHORE_DB_USER: admin
             SEMAPHORE_DB_PASS: changeme
             SEMAPHORE_ADMIN: admin
             SEMAPHORE_ADMIN_PASSWORD: changeme
             SEMAPHORE_ADMIN_NAME: Admin
             SEMAPHORE_ADMIN_EMAIL: admin@localhost
         networks:
-            - semaphore_network
-    nginx:
-        image: nginx:alpine
-        ports:
-            - 80:80
-        depends_on:
-            - semaphore
-        networks:
-            - semaphore_network
-
+            - scd_network
     deno:
         build:
             context: .
             dockerfile: Dockerfile.Deno
-        ports:
-            - 8000:8000
-        image: scd-net-deno:latest
         container_name: scd-net-deno
         command: run --allow-net --allow-read --allow-env --allow-write --unstable main.ts
         working_dir: /app
+        networks:
+            - scd_network
+    nginx:
+        depends_on:
+            - semaphore
+            - deno
+        build:
+            context: .
+            dockerfile: Dockerfile.Nginx
+        ports:
+            - 80:80
+        networks:
+            - scd_network
 networks:
-    semaphore_network: {driver: "bridge"}
+    scd_network: {driver: "bridge"}
