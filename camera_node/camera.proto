@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package camera;
+
+service CameraNode {
+  rpc GetStatus(StatusRequest) returns (NodeStatus);
+}
+
+message StatusRequest {}
+
+message NodeStatus {
+  string node_id = 1;
+  double uptime_s = 2;
+}
