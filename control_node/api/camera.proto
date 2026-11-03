@@ -9,6 +9,5 @@ service CameraNode {
 message StatusRequest {}
 
 message NodeStatus {
-  string node_id = 1;
-  double uptime_s = 2;
+  double uptime_s = 1;
 }

@@ -12,7 +12,7 @@ START = time.monotonic()
 class CameraNode(camera_pb2_grpc.CameraNodeServicer):
     def GetStatus(self, request, context):
         print("GetStatus called from", context.peer())
-        return camera_pb2.NodeStatus(node_id="laptop", uptime_s=time.monotonic() - START)
+        return camera_pb2.NodeStatus(uptime_s=time.monotonic() - START)
 
 
 server = grpc.server(futures.ThreadPoolExecutor(max_workers=4))

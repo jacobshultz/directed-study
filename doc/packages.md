@@ -1,1 +1,0 @@
-P node: python3-opencv
