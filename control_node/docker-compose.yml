@@ -54,4 +54,6 @@ services:
         networks:
             - scd_network
 networks:
+    extra_hosts:
+        - "host.docker.internal:host-gateway"
     scd_network: {driver: "bridge"}

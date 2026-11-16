@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package scd;
+
+message Person {
+  repeated float keypoints = 1;
+  float score = 2;
+}
+
+message PoseFrame {
+  string camera_id = 1;
+  uint64 seq = 2;
+  int64 sensor_timestamp_ns = 3;
+  int64 capture_time_unix_ns = 4;
+  uint32 width = 5;
+  uint32 height = 6;
+  repeated Person people = 7;
+}
+
+message StreamSummary {
+  uint64 frames_received = 1;
+}
+
+service PoseStream {
+  // Each Pi opens one long-lived stream and pushes frames into it.
+  rpc Stream(stream PoseFrame) returns (StreamSummary);
+}
