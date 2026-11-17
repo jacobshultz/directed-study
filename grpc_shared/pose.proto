@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package scd;
+package pose;
 
 message Person {
   repeated float keypoints = 1;

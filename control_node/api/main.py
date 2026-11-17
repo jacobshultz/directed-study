@@ -5,8 +5,6 @@ import threading
 from google.protobuf.json_format import MessageToDict
 import grpc
 from fastapi import FastAPI, HTTPException
-import camera_pb2
-import camera_pb2_grpc
 import pose_pb2
 import pose_pb2_grpc
 
@@ -69,8 +67,8 @@ def get_leases():
                         "hostname": parts[3],
                         "client_id": parts[4]
                     })
-    except FileNotFoundError:
-        print("dnsmasq leases file not found")
+    except FileNotFoundError as ex:
+        print("dnsmasq leases file not found:", ex)
     print("leases are:", leases)
     return leases
 
@@ -78,7 +76,11 @@ def get_leases():
 def hello():
     return {"message": "controller is running"}
 
-@app.post("/api/skeleton")
+@app.get("/api/leases")
+def api_leases():
+    return {"leases:": get_leases()}
+
+@app.get("/api/skeleton")
 def skeleton():
     frames = list(latest.values())
     return {"frames": [MessageToDict(f, preserving_proto_field_name=True) for f in frames]}

@@ -26,12 +26,14 @@ services:
             - scd_network
     python_api:
         build:
-            context: .
-            dockerfile: Dockerfile.Api
+            context: ..
+            dockerfile: control_node/Dockerfile.Api
         container_name: scd-net-api
         working_dir: /app
         networks:
             - scd_network
+        extra_hosts:
+            - "host.docker.internal=host-gateway"
     deno_app:
         build:
             context: .
@@ -54,6 +56,4 @@ services:
         networks:
             - scd_network
 networks:
-    extra_hosts:
-        - "host.docker.internal:host-gateway"
     scd_network: {driver: "bridge"}

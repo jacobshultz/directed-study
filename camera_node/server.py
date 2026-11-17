@@ -39,12 +39,6 @@ def get_args():
     return parser.parse_args()
 
 
-def get_drawer():
-    categories = intrinsics.labels
-    categories = [c for c in categories if c and c != "-"]
-    return COCODrawer(categories, imx500, needs_rescale_coords=False)
-
-
 if __name__ == "__main__":
     args = get_args()
 
@@ -77,8 +71,6 @@ if __name__ == "__main__":
     if args.print_intrinsics:
         print(intrinsics)
         exit()
-
-    drawer = get_drawer()
 
     picam2 = Picamera2(imx500.camera_num)   # thread that recieves frames
     config = picam2.create_preview_configuration(controls={'FrameRate': intrinsics.inference_rate}, buffer_count=12)
@@ -121,7 +113,7 @@ if __name__ == "__main__":
             yield msg
 
 
-    channel = grpc.insecure_channel("192.168.2.5:50051")    # connect to the control server
+    channel = grpc.insecure_channel("192.168.2.5:80")    # connect to the control server
     stub = pose_pb2_grpc.PoseStreamStub(channel)
     summary = stub.Stream(frames())   # gRPC pulls each yielded frame and sends it
     print("server received", summary.frames_received, "frames")   # only reached if frames() ends
